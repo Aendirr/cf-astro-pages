@@ -287,7 +287,7 @@ The site implements several performance optimizations:
 
 ## License
 
-[License(https://github.com/Aendirr/cf-astro-pages/blob/main/LICENSE)]
+[License](https://github.com/Aendirr/cf-astro-pages/blob/main/LICENSE)
 
 ## Support
 
