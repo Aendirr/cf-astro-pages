@@ -90,18 +90,18 @@ export interface RedirectLink {
 }
 
 export interface Category {
-  id: string;
+  id?: string;
   slug: string;
   name: string;
   description?: string;
-  lang: Language;
+  lang?: Language;
 }
 
 export interface Tag {
-  id: string;
+  id?: string;
   slug: string;
   name: string;
-  lang: Language;
+  lang?: Language;
 }
 
 export interface PaginatedResponse<T> {
