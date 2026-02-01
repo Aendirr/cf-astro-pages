@@ -1,0 +1,109 @@
+---
+import type { Language } from '@/types';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+import PostCard from '@/components/PostCard.astro';
+import Pagination from '@/components/Pagination.astro';
+import { api } from '@/lib/api';
+import { isValidLanguage, t, getCacheHeaders, buildUrl } from '@/lib/utils';
+
+const { lang, page: pageParam } = Astro.params;
+
+if (!lang || !isValidLanguage(lang)) {
+  return Astro.redirect('/tr/blog', 301);
+}
+
+const typedLang = lang as Language;
+const currentPage = parseInt(pageParam || '1');
+
+if (isNaN(currentPage) || currentPage < 1) {
+  return Astro.redirect(`/${typedLang}/blog`, 301);
+}
+
+// Redirect page 1 to base blog URL
+if (currentPage === 1) {
+  return Astro.redirect(`/${typedLang}/blog`, 301);
+}
+
+// Fetch settings and posts in parallel
+const [settings, response] = await Promise.all([
+  api.getSettings(),
+  api.getPosts({ lang: typedLang, page: currentPage, limit: 12 }),
+]);
+
+const { data: posts, total, page, limit } = response;
+const totalPages = Math.ceil(total / limit);
+
+// 404 if page number is out of range
+if (currentPage > totalPages) {
+  return Astro.redirect(`/${typedLang}/blog`, 301);
+}
+
+// Set cache headers
+Astro.response.headers.set('Cache-Control', getCacheHeaders('list')['Cache-Control']);
+
+// Add rel=prev/next for pagination
+const linkHeaders = [];
+if (currentPage > 1) {
+  const prevUrl = currentPage === 2 ? buildUrl(typedLang, 'blog') : buildUrl(typedLang, `blog/page/${currentPage - 1}`);
+  linkHeaders.push(`<${prevUrl}>; rel="prev"`);
+}
+if (currentPage < totalPages) {
+  linkHeaders.push(`<${buildUrl(typedLang, `blog/page/${currentPage + 1}`)}>; rel="next"`);
+}
+if (linkHeaders.length > 0) {
+  Astro.response.headers.set('Link', linkHeaders.join(', '));
+}
+
+const breadcrumbs = [
+  { label: t(typedLang, 'home'), href: `/${typedLang}` },
+  { label: t(typedLang, 'blog'), href: `/${typedLang}/blog` },
+  { label: `${t(typedLang, 'page')} ${currentPage}`, href: `/${typedLang}/blog/page/${currentPage}` },
+];
+
+const alternates = [
+  { lang: 'tr' as Language, href: buildUrl('tr', `blog/page/${currentPage}`) },
+  { lang: 'en' as Language, href: buildUrl('en', `blog/page/${currentPage}`) },
+  { lang: 'de' as Language, href: buildUrl('de', `blog/page/${currentPage}`) },
+];
+---
+
+<BaseLayout
+  lang={typedLang}
+  settings={settings}
+  seo={{
+    title: `${t(typedLang, 'blog')} - ${t(typedLang, 'page')} ${currentPage}`,
+    description: `${t(typedLang, 'allPosts')} - ${t(typedLang, 'page')} ${currentPage}`,
+    canonical: buildUrl(typedLang, `blog/page/${currentPage}`),
+    type: 'website',
+    lang: typedLang,
+    alternates,
+  }}
+  currentPath="/blog"
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <Breadcrumb items={breadcrumbs} />
+
+    <header class="mb-12">
+      <h1 class="text-4xl md:text-5xl font-display font-bold text-neutral-900 mb-4">
+        {t(typedLang, 'blog')}
+      </h1>
+      <p class="text-xl text-neutral-600">
+        {t(typedLang, 'page')} {currentPage} {t(typedLang, 'allPosts').toLowerCase()}
+      </p>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {posts.map(post => (
+        <PostCard post={post} lang={typedLang} />
+      ))}
+    </div>
+
+    <Pagination
+      currentPage={page}
+      totalPages={totalPages}
+      baseUrl={`/${typedLang}/blog`}
+      lang={typedLang}
+    />
+  </div>
+</BaseLayout>

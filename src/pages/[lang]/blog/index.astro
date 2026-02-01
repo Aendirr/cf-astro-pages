@@ -1,0 +1,93 @@
+---
+import type { Language } from '@/types';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+import PostCard from '@/components/PostCard.astro';
+import Pagination from '@/components/Pagination.astro';
+import { api } from '@/lib/api';
+import { isValidLanguage, t, getCacheHeaders, buildUrl } from '@/lib/utils';
+
+const { lang } = Astro.params;
+
+if (!lang || !isValidLanguage(lang)) {
+  return Astro.redirect('/tr/blog', 301);
+}
+
+const typedLang = lang as Language;
+
+// Fetch settings and posts in parallel
+const [settings, response] = await Promise.all([
+  api.getSettings(),
+  api.getPosts({ lang: typedLang, page: 1, limit: 12 }),
+]);
+
+const { data: posts, total, page, limit } = response;
+const totalPages = Math.ceil(total / limit);
+
+// Set cache headers
+Astro.response.headers.set('Cache-Control', getCacheHeaders('list')['Cache-Control']);
+
+const breadcrumbs = [
+  { label: t(typedLang, 'home'), href: `/${typedLang}` },
+  { label: t(typedLang, 'blog'), href: `/${typedLang}/blog` },
+];
+
+const alternates = [
+  { lang: 'tr' as Language, href: buildUrl('tr', 'blog') },
+  { lang: 'en' as Language, href: buildUrl('en', 'blog') },
+  { lang: 'de' as Language, href: buildUrl('de', 'blog') },
+];
+
+// Add rel=next for pagination
+if (totalPages > 1) {
+  Astro.response.headers.set('Link', `<${buildUrl(typedLang, 'blog/page/2')}>; rel="next"`);
+}
+---
+
+<BaseLayout
+  lang={typedLang}
+  settings={settings}
+  seo={{
+    title: t(typedLang, 'blog'),
+    description: `${t(typedLang, 'allPosts')} - ${settings.siteName}`,
+    canonical: buildUrl(typedLang, 'blog'),
+    type: 'website',
+    lang: typedLang,
+    alternates,
+  }}
+  currentPath="/blog"
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <Breadcrumb items={breadcrumbs} />
+
+    <header class="mb-12">
+      <h1 class="text-4xl md:text-5xl font-display font-bold text-neutral-900 mb-4">
+        {t(typedLang, 'blog')}
+      </h1>
+      <p class="text-xl text-neutral-600">
+        {t(typedLang, 'allPosts')}
+      </p>
+    </header>
+
+    {posts.length === 0 ? (
+      <div class="text-center py-12">
+        <p class="text-neutral-600 text-lg">{t(typedLang, 'noPosts')}</p>
+      </div>
+    ) : (
+      <>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {posts.map(post => (
+            <PostCard post={post} lang={typedLang} />
+          ))}
+        </div>
+
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          baseUrl={`/${typedLang}/blog`}
+          lang={typedLang}
+        />
+      </>
+    )}
+  </div>
+</BaseLayout>

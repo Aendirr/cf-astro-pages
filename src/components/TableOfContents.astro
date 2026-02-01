@@ -1,0 +1,88 @@
+---
+import type { TableOfContentsItem, Language } from '@/types';
+import { t } from '@/lib/utils';
+
+interface Props {
+  items: TableOfContentsItem[];
+  lang: Language;
+}
+
+const { items, lang } = Astro.props;
+---
+
+{items.length > 0 && (
+  <nav class="toc-container bg-neutral-50 rounded-xl p-6 sticky top-24 hidden lg:block">
+    <h3 class="text-sm font-semibold text-neutral-900 uppercase tracking-wide mb-4">
+      {t(lang, 'tableOfContents')}
+    </h3>
+    <ul class="space-y-2 text-sm">
+      {items.map((item) => (
+        <li style={`margin-left: ${(item.level - 2) * 1}rem`}>
+          <a
+            href={`#${item.id}`}
+            class="toc-link block text-neutral-600 hover:text-primary-600 transition-colors py-1"
+            data-target={item.id}
+          >
+            {item.text}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+)}
+
+<style>
+  .toc-link {
+    position: relative;
+  }
+
+  .toc-link::before {
+    content: '';
+    position: absolute;
+    left: -1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 0;
+    background-color: #0ea5e9;
+    transition: height 0.2s ease;
+    border-radius: 2px;
+  }
+
+  .toc-link.active::before {
+    height: 100%;
+  }
+
+  .toc-link.active {
+    color: #0ea5e9;
+    font-weight: 500;
+  }
+</style>
+
+<script>
+  // Highlight active TOC link based on scroll position
+  const observerOptions = {
+    root: null,
+    rootMargin: '-80px 0px -80% 0px',
+    threshold: 0,
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      const id = entry.target.getAttribute('id');
+      const tocLink = document.querySelector(`.toc-link[data-target="${id}"]`);
+
+      if (entry.isIntersecting && tocLink) {
+        document.querySelectorAll('.toc-link').forEach((link) => {
+          link.classList.remove('active');
+        });
+        tocLink.classList.add('active');
+      }
+    });
+  }, observerOptions);
+
+  // Observe all headings with IDs
+  document.querySelectorAll('h2[id], h3[id]').forEach((heading) => {
+    observer.observe(heading);
+  });
+</script>

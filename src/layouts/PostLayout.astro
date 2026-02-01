@@ -1,0 +1,228 @@
+---
+import type { Post, Language, TableOfContentsItem, BlogSettings } from '@/types';
+import BaseLayout from './BaseLayout.astro';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+import ShareButtons from '@/components/ShareButtons.astro';
+import TableOfContents from '@/components/TableOfContents.astro';
+import PostCard from '@/components/PostCard.astro';
+import CTABlock from '@/components/blocks/CTABlock.astro';
+import RelatedLinks from '@/components/blocks/RelatedLinks.astro';
+import RedirectLinks from '@/components/blocks/RedirectLinks.astro';
+import { formatDate, calculateReadingTime, t, formatDateISO, buildUrl } from '@/lib/utils';
+
+interface Props {
+  post: Post;
+  lang: Language;
+  settings: BlogSettings;
+  relatedPosts?: Post[];
+  tocItems?: TableOfContentsItem[];
+}
+
+const { post, lang, settings, relatedPosts = [], tocItems = [] } = Astro.props;
+
+const readingTime = calculateReadingTime(post.bodyMarkdown);
+const postUrl = buildUrl(lang, `blog/${post.slug}`);
+
+const breadcrumbs = [
+  { label: t(lang, 'home'), href: `/${lang}` },
+  { label: t(lang, 'blog'), href: `/${lang}/blog` },
+  { label: post.title, href: postUrl },
+];
+
+const alternates = [
+  { lang: 'tr' as Language, href: buildUrl('tr', `blog/${post.slug}`) },
+  { lang: 'en' as Language, href: buildUrl('en', `blog/${post.slug}`) },
+  { lang: 'de' as Language, href: buildUrl('de', `blog/${post.slug}`) },
+];
+
+// Use post-level SEO overrides or fallback to post data
+const seoTitle = post.seoTitle || post.title;
+const seoDescription = post.seoDescription || post.excerpt;
+const seoImage = post.ogImageUrl || post.coverImageUrl || settings.ogImageUrl;
+
+// JSON-LD structured data
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: post.title,
+  description: post.excerpt,
+  image: post.coverImageUrl,
+  datePublished: formatDateISO(post.publishedAt),
+  dateModified: formatDateISO(post.updatedAt),
+  author: {
+    '@type': 'Person',
+    name: post.authorName,
+    ...(post.authorAvatar && { image: post.authorAvatar }),
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: settings.siteName,
+    ...(settings.logoUrl && {
+      logo: {
+        '@type': 'ImageObject',
+        url: settings.logoUrl,
+      },
+    }),
+  },
+  mainEntityOfPage: {
+    '@type': 'WebPage',
+    '@id': postUrl,
+  },
+};
+
+const breadcrumbJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: breadcrumbs.map((item, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    name: item.label,
+    item: `${import.meta.env.PUBLIC_SITE_URL}${item.href}`,
+  })),
+};
+---
+
+<BaseLayout
+  lang={lang}
+  settings={settings}
+  seo={{
+    title: seoTitle,
+    description: seoDescription,
+    canonical: post.canonicalUrl || postUrl,
+    image: seoImage,
+    noIndex: post.noIndex,
+    type: 'article',
+    publishedTime: formatDateISO(post.publishedAt),
+    modifiedTime: formatDateISO(post.updatedAt),
+    author: post.authorName,
+    tags: post.tags.map(t => t.name),
+    lang,
+    alternates,
+  }}
+  currentPath={`/blog/${post.slug}`}
+>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbJsonLd)} />
+
+  <article class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <Breadcrumb items={breadcrumbs} />
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <!-- Main content -->
+      <div class="lg:col-span-8">
+        <!-- Header -->
+        <header class="mb-8">
+          <div class="flex flex-wrap gap-2 mb-4">
+            {post.categories.map(category => (
+              <a
+                href={`/${lang}/category/${category.slug}`}
+                class="inline-block px-3 py-1 text-sm font-medium bg-primary-50 text-primary-700 rounded-full hover:bg-primary-100 transition-colors"
+              >
+                {category.name}
+              </a>
+            ))}
+          </div>
+
+          <h1 class="text-4xl md:text-5xl font-display font-bold text-neutral-900 mb-6 leading-tight">
+            {post.title}
+          </h1>
+
+          <div class="flex flex-wrap items-center gap-4 text-neutral-600 mb-6">
+            <div class="flex items-center gap-2">
+              {post.authorAvatar && (
+                <img
+                  src={post.authorAvatar}
+                  alt={post.authorName}
+                  class="w-10 h-10 rounded-full"
+                />
+              )}
+              <span class="font-medium text-neutral-900">{post.authorName}</span>
+            </div>
+            <span class="text-neutral-400">&middot;</span>
+            <time datetime={post.publishedAt}>
+              {formatDate(post.publishedAt, lang)}
+            </time>
+            <span class="text-neutral-400">&middot;</span>
+            <span>{readingTime} {t(lang, 'readingTime')}</span>
+          </div>
+
+          <ShareButtons lang={lang} title={post.title} url={postUrl} />
+        </header>
+
+        <!-- Cover Image -->
+        {post.coverImageUrl && (
+          <div class="mb-8 rounded-xl overflow-hidden">
+            <img
+              src={post.coverImageUrl}
+              alt={post.title}
+              class="w-full h-auto"
+              loading="eager"
+            />
+          </div>
+        )}
+
+        <!-- Markdown Content -->
+        <div class="prose prose-lg max-w-none prose-neutral prose-headings:font-display prose-headings:font-bold prose-a:text-primary-600 hover:prose-a:text-primary-700 prose-img:rounded-lg prose-pre:bg-neutral-900 prose-pre:text-neutral-100">
+          <slot />
+        </div>
+
+        <!-- POST BLOCKS -->
+
+        <!-- CTA Block -->
+        {post.blocks?.cta && <CTABlock block={post.blocks.cta} />}
+
+        <!-- Related Links -->
+        {post.blocks?.relatedLinks && post.blocks.relatedLinks.length > 0 && (
+          <RelatedLinks links={post.blocks.relatedLinks} title="Related Resources" />
+        )}
+
+        <!-- Redirect Links -->
+        {post.blocks?.redirectLinks && post.blocks.redirectLinks.length > 0 && (
+          <RedirectLinks links={post.blocks.redirectLinks} title="Quick Links" />
+        )}
+
+        <!-- END POST BLOCKS -->
+
+        <!-- Tags -->
+        {post.tags.length > 0 && (
+          <div class="mt-12 pt-8 border-t border-neutral-200">
+            <div class="flex flex-wrap gap-2">
+              {post.tags.map(tag => (
+                <a
+                  href={`/${lang}/tag/${tag.slug}`}
+                  class="inline-block px-4 py-2 text-sm bg-neutral-100 text-neutral-700 rounded-full hover:bg-neutral-200 transition-colors"
+                >
+                  #{tag.name}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <!-- Share Again -->
+        <div class="mt-8 pt-8 border-t border-neutral-200">
+          <ShareButtons lang={lang} title={post.title} url={postUrl} />
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="lg:col-span-4">
+        <TableOfContents items={tocItems} lang={lang} />
+      </aside>
+    </div>
+
+    <!-- Related Posts -->
+    {relatedPosts.length > 0 && (
+      <section class="mt-16 pt-16 border-t border-neutral-200">
+        <h2 class="text-3xl font-display font-bold text-neutral-900 mb-8">
+          {t(lang, 'relatedPosts')}
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {relatedPosts.map(relatedPost => (
+            <PostCard post={relatedPost} lang={lang} />
+          ))}
+        </div>
+      </section>
+    )}
+  </article>
+</BaseLayout>

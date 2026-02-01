@@ -1,0 +1,106 @@
+---
+import type { Language } from '@/types';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Hero from '@/components/Hero.astro';
+import PostCard from '@/components/PostCard.astro';
+import Newsletter from '@/components/Newsletter.astro';
+import { api } from '@/lib/api';
+import { isValidLanguage, t, getCacheHeaders, buildUrl } from '@/lib/utils';
+
+const { lang } = Astro.params;
+
+// Validate language
+if (!lang || !isValidLanguage(lang)) {
+  return Astro.redirect('/tr', 301);
+}
+
+const typedLang = lang as Language;
+
+// Fetch settings and posts in parallel
+const [settings, featuredResponse, latestResponse] = await Promise.all([
+  api.getSettings(),
+  api.getPosts({ lang: typedLang, page: 1, limit: 3 }),
+  api.getPosts({ lang: typedLang, page: 1, limit: 6 }),
+]);
+
+const featuredPosts = featuredResponse.data.filter(p => p.featured).slice(0, 3);
+const latestPosts = latestResponse.data;
+
+// Set cache headers
+const cacheHeaders = getCacheHeaders('list');
+Astro.response.headers.set('Cache-Control', cacheHeaders['Cache-Control']);
+
+const alternates = [
+  { lang: 'tr' as Language, href: buildUrl('tr') },
+  { lang: 'en' as Language, href: buildUrl('en') },
+  { lang: 'de' as Language, href: buildUrl('de') },
+];
+---
+
+<BaseLayout
+  lang={typedLang}
+  settings={settings}
+  seo={{
+    title: settings.seoTitle || settings.siteName,
+    description: settings.seoDescription || settings.siteDescription,
+    canonical: buildUrl(typedLang),
+    image: settings.ogImageUrl,
+    type: 'website',
+    lang: typedLang,
+    alternates,
+  }}
+  currentPath=""
+>
+  <Hero lang={typedLang} />
+
+  <!-- Featured Posts -->
+  {featuredPosts.length > 0 && (
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div class="flex items-center justify-between mb-8">
+        <h2 class="text-3xl font-display font-bold text-neutral-900">
+          {t(typedLang, 'featuredPosts')}
+        </h2>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {featuredPosts.map(post => (
+          <PostCard post={post} lang={typedLang} />
+        ))}
+      </div>
+    </section>
+  )}
+
+  <!-- Latest Posts -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div class="flex items-center justify-between mb-8">
+      <h2 class="text-3xl font-display font-bold text-neutral-900">
+        {t(typedLang, 'latestPosts')}
+      </h2>
+      <a
+        href={`/${typedLang}/blog`}
+        class="text-primary-600 hover:text-primary-700 font-medium inline-flex items-center"
+      >
+        {t(typedLang, 'allPosts')}
+        <svg class="ml-1 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </a>
+    </div>
+
+    {latestPosts.length === 0 ? (
+      <div class="text-center py-12">
+        <p class="text-neutral-600 text-lg">{t(typedLang, 'noPosts')}</p>
+      </div>
+    ) : (
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {latestPosts.map(post => (
+          <PostCard post={post} lang={typedLang} />
+        ))}
+      </div>
+    )}
+  </section>
+
+  <!-- Newsletter CTA -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <Newsletter lang={typedLang} />
+  </div>
+</BaseLayout>

@@ -1,0 +1,81 @@
+---
+import type { Language } from '@/types';
+import { getLanguageName } from '@/lib/utils';
+
+interface Props {
+  lang: Language;
+  currentPath?: string;
+}
+
+const { lang, currentPath = '' } = Astro.props;
+
+const languages: Language[] = ['tr', 'en', 'de'];
+
+// Build language switcher URLs preserving context
+function getLangUrl(targetLang: Language): string {
+  // Remove current language prefix and add new one
+  const pathWithoutLang = currentPath.replace(/^\/(tr|en|de)/, '');
+  return `/${targetLang}${pathWithoutLang}`;
+}
+---
+
+<div class="relative inline-block text-left">
+  <button
+    type="button"
+    class="inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+    id="language-menu-button"
+    aria-expanded="false"
+    aria-haspopup="true"
+  >
+    <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+    </svg>
+    {getLanguageName(lang)}
+    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+    </svg>
+  </button>
+
+  <div
+    class="hidden absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+    id="language-menu"
+    role="menu"
+    aria-orientation="vertical"
+    aria-labelledby="language-menu-button"
+  >
+    <div class="py-1" role="none">
+      {languages.map((l) => (
+        <a
+          href={getLangUrl(l)}
+          class={`block px-4 py-2 text-sm ${
+            l === lang
+              ? 'bg-neutral-100 text-neutral-900 font-medium'
+              : 'text-neutral-700 hover:bg-neutral-50'
+          }`}
+          role="menuitem"
+        >
+          {getLanguageName(l)}
+        </a>
+      ))}
+    </div>
+  </div>
+</div>
+
+<script>
+  const button = document.getElementById('language-menu-button');
+  const menu = document.getElementById('language-menu');
+
+  button?.addEventListener('click', () => {
+    const isExpanded = button.getAttribute('aria-expanded') === 'true';
+    button.setAttribute('aria-expanded', String(!isExpanded));
+    menu?.classList.toggle('hidden');
+  });
+
+  // Close menu when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!button?.contains(e.target as Node) && !menu?.contains(e.target as Node)) {
+      menu?.classList.add('hidden');
+      button?.setAttribute('aria-expanded', 'false');
+    }
+  });
+</script>

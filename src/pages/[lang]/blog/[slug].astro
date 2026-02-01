@@ -1,0 +1,51 @@
+---
+import type { Language } from '@/types';
+import PostLayout from '@/layouts/PostLayout.astro';
+import { api } from '@/lib/api';
+import { isValidLanguage, getCacheHeaders, renderMarkdown, addHeadingIds, extractTableOfContents, getRelatedPosts } from '@/lib/utils';
+import { sanitizeHtml } from '@/lib/sanitizer';
+
+const { lang, slug } = Astro.params;
+
+if (!lang || !isValidLanguage(lang) || !slug) {
+  return new Response(null, { status: 404 });
+}
+
+const typedLang = lang as Language;
+
+// Fetch settings, post, and related posts in parallel
+const [settings, post] = await Promise.all([
+  api.getSettings(),
+  api.getPost(slug, typedLang),
+]);
+
+if (!post) {
+  return new Response(null, { status: 404 });
+}
+
+// Set cache headers
+Astro.response.headers.set('Cache-Control', getCacheHeaders('post', post.noIndex)['Cache-Control']);
+
+// Render body content
+let bodyContent = '';
+if (post.bodyMarkdown) {
+  // Prefer Markdown for security
+  bodyContent = await renderMarkdown(post.bodyMarkdown);
+  bodyContent = addHeadingIds(bodyContent);
+} else if (post.bodyHtml) {
+  // Sanitize HTML if that's what we get
+  bodyContent = sanitizeHtml(post.bodyHtml);
+  bodyContent = addHeadingIds(bodyContent);
+}
+
+// Extract table of contents
+const tocItems = extractTableOfContents(bodyContent);
+
+// Fetch all posts for related posts (simple implementation)
+const allPostsResponse = await api.getPosts({ lang: typedLang, page: 1, limit: 20 });
+const relatedPosts = getRelatedPosts(post, allPostsResponse.data, 3);
+---
+
+<PostLayout post={post} lang={typedLang} settings={settings} relatedPosts={relatedPosts} tocItems={tocItems}>
+  <Fragment set:html={bodyContent} />
+</PostLayout>

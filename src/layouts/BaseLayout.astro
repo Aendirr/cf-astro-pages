@@ -1,0 +1,62 @@
+---
+import type { Language, SEOProps, BlogSettings } from '@/types';
+import SEO from '@/components/SEO.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import { api } from '@/lib/api';
+
+interface Props {
+  lang: Language;
+  seo: SEOProps;
+  settings?: BlogSettings;
+  currentPath?: string;
+}
+
+const { lang, seo, settings: providedSettings, currentPath } = Astro.props;
+
+// If settings not provided, fetch them (for backward compatibility)
+const settings = providedSettings || await api.getSettings();
+---
+
+<!DOCTYPE html>
+<html lang={lang}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Favicon from settings or fallback -->
+    {settings.faviconUrl ? (
+      <link rel="icon" href={settings.faviconUrl} />
+    ) : (
+      <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    )}
+
+    <link rel="sitemap" href="/sitemap.xml" />
+    <link rel="alternate" type="application/rss+xml" title="RSS Feed" href="/rss.xml" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <SEO {...seo} twitterHandle={settings.twitterHandle} />
+
+    <!-- Security Headers -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="SAMEORIGIN" />
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+  </head>
+  <body class="antialiased bg-white text-neutral-900 font-sans">
+    <Header lang={lang} settings={settings} currentPath={currentPath} />
+
+    <main class="min-h-screen">
+      <slot />
+    </main>
+
+    <Footer lang={lang} settings={settings} />
+  </body>
+</html>

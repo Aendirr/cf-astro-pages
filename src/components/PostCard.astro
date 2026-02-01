@@ -1,0 +1,80 @@
+---
+import type { Post, Language } from '@/types';
+import { formatDate, calculateReadingTime, t } from '@/lib/utils';
+
+interface Props {
+  post: Post;
+  lang: Language;
+}
+
+const { post, lang } = Astro.props;
+const readingTime = calculateReadingTime(post.bodyHtml || post.bodyMarkdown || post.excerpt);
+---
+
+<article class="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300 border border-neutral-200">
+  <a href={`/${lang}/blog/${post.slug}`} class="block">
+    <div class="aspect-[16/9] overflow-hidden bg-neutral-100">
+      <img
+        src={post.coverImageUrl}
+        alt={post.title}
+        loading="lazy"
+        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+      />
+    </div>
+  </a>
+
+  <div class="p-6">
+    <!-- Categories & Tags -->
+    <div class="flex flex-wrap gap-2 mb-3">
+      {post.categories.slice(0, 2).map(category => (
+        <a
+          href={`/${lang}/category/${category.slug}`}
+          class="inline-block px-3 py-1 text-xs font-medium bg-primary-50 text-primary-700 rounded-full hover:bg-primary-100 transition-colors"
+        >
+          {category.name}
+        </a>
+      ))}
+    </div>
+
+    <!-- Title -->
+    <h3 class="mb-3">
+      <a
+        href={`/${lang}/blog/${post.slug}`}
+        class="text-xl font-bold text-neutral-900 hover:text-primary-600 transition-colors line-clamp-2"
+      >
+        {post.title}
+      </a>
+    </h3>
+
+    <!-- Excerpt -->
+    <p class="text-neutral-600 mb-4 line-clamp-3">
+      {post.excerpt}
+    </p>
+
+    <!-- Meta -->
+    <div class="flex items-center justify-between text-sm text-neutral-500">
+      <div class="flex items-center space-x-4">
+        <span>{post.authorName}</span>
+        <span>&middot;</span>
+        <time datetime={post.publishedAt}>
+          {formatDate(post.publishedAt, lang)}
+        </time>
+      </div>
+      <span>{readingTime} {t(lang, 'readingTime')}</span>
+    </div>
+
+    <!-- Tags -->
+    {post.tags.length > 0 && (
+      <div class="mt-4 pt-4 border-t border-neutral-100 flex flex-wrap gap-2">
+        {post.tags.slice(0, 3).map(tag => (
+          <a
+            href={`/${lang}/tag/${tag.slug}`}
+            class="text-xs text-neutral-600 hover:text-primary-600 transition-colors"
+          >
+            #{tag.name}
+          </a>
+        ))}
+      </div>
+    )}
+  </div>
+</article>
