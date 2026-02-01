@@ -287,10 +287,10 @@ The site implements several performance optimizations:
 
 ## License
 
-[Your License Here]
+[License (https://github.com/Aendirr/cf-astro-pages/blob/main/LICENSE)]
 
 ## Support
 
 For issues and questions:
-- GitHub Issues: [Your Repo URL]
+- GitHub Issues
 - Email: support@sarlab.pro
