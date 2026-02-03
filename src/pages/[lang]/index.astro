@@ -51,7 +51,11 @@ const alternates = [
   }}
   currentPath=""
 >
-  <Hero lang={typedLang} />
+  <Hero
+    lang={typedLang}
+    title={settings.siteName}
+    subtitle={settings.siteDescription}
+  />
 
   <!-- Featured Posts -->
   {featuredPosts.length > 0 && (
