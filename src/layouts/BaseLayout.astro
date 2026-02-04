@@ -44,6 +44,19 @@ const settings = providedSettings || await api.getSettings();
 
     <SEO {...seo} twitterHandle={settings.twitterHandle} />
 
+    <!-- Google Analytics -->
+    {settings.analyticsId && (
+      <>
+        <script async src={`https://www.googletagmanager.com/gtag/js?id=${settings.analyticsId}`}></script>
+        <script define:vars={{ analyticsId: settings.analyticsId }}>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', analyticsId);
+        </script>
+      </>
+    )}
+
     <!-- Security Headers -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta http-equiv="X-Frame-Options" content="SAMEORIGIN" />

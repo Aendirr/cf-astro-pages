@@ -17,6 +17,7 @@ export interface BlogSettings {
   enableNewsletter?: boolean;
   newsletterTitle?: string;
   newsletterDescription?: string;
+  analyticsId?: string;
 }
 
 export interface NavigationItem {
