@@ -1,4 +1,80 @@
 ---
-// Redirect root to /tr (default language)
-return Astro.redirect('/tr', 301);
+import SEO from '@/components/SEO.astro';
+import { api } from '@/lib/api';
+import type { Language } from '@/types';
+
+const settings = await api.getSettings();
+const siteUrl = import.meta.env.PUBLIC_SITE_URL || 'https://sarlab.pro';
+const languages: Array<{ lang: Language; label: string; href: string }> = [
+  { lang: 'tr', label: 'Turkce', href: `${siteUrl}/tr` },
+  { lang: 'en', label: 'English', href: `${siteUrl}/en` },
+  { lang: 'de', label: 'Deutsch', href: `${siteUrl}/de` },
+];
 ---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <SEO
+      title={settings.seoTitle || settings.siteName}
+      description={settings.seoDescription || settings.siteDescription}
+      canonical={siteUrl}
+      xDefaultHref={siteUrl}
+      image={settings.ogImageUrl}
+      type="website"
+      lang="en"
+      alternates={[
+        { lang: 'tr', href: `${siteUrl}/tr` },
+        { lang: 'en', href: `${siteUrl}/en` },
+        { lang: 'de', href: `${siteUrl}/de` },
+      ]}
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="min-h-screen bg-white text-neutral-900 font-sans antialiased">
+    <main class="mx-auto flex min-h-screen max-w-5xl flex-col px-6 py-10">
+      <div class="flex items-center justify-between border-b border-neutral-200 pb-6">
+        <div class="text-2xl font-bold">{settings.siteName}</div>
+        <div class="rounded-full border border-neutral-200 px-4 py-2 text-sm text-neutral-600">
+          x-default landing page
+        </div>
+      </div>
+
+      <section class="flex flex-1 flex-col items-center justify-center py-16 text-center">
+        <p class="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-primary-600">
+          Multi-language entry
+        </p>
+        <h1 class="mb-4 text-5xl font-black tracking-tight text-neutral-950">
+          {settings.siteName}
+        </h1>
+        <p class="mx-auto mb-10 max-w-2xl text-lg text-neutral-600">
+          {settings.siteDescription || 'Choose your preferred language to browse articles and SEO content.'}
+        </p>
+
+        <div class="grid w-full max-w-3xl gap-4 md:grid-cols-3">
+          {languages.map((item) => (
+            <a
+              href={item.href}
+              class="rounded-2xl border border-neutral-200 bg-neutral-50 px-6 py-8 text-left transition hover:-translate-y-0.5 hover:border-primary-300 hover:bg-white hover:shadow-lg"
+            >
+              <div class="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">
+                {item.lang}
+              </div>
+              <div class="mb-3 text-2xl font-bold text-neutral-950">{item.label}</div>
+              <div class="text-sm text-neutral-600">
+                Open the {item.label} version of the site.
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

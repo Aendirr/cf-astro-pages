@@ -125,6 +125,7 @@ export interface SEOProps {
   title: string;
   description: string;
   canonical?: string;
+  xDefaultHref?: string;
   image?: string;
   noIndex?: boolean;
   type?: 'website' | 'article';

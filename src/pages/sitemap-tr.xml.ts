@@ -1,9 +1,9 @@
 import type { APIRoute } from 'astro';
 import { getCacheHeaders } from '@/lib/utils';
-import { buildSitemapIndexXml } from '@/lib/sitemap';
+import { buildLanguageSitemapXml } from '@/lib/sitemap';
 
 export const GET: APIRoute = async () => {
-  const xml = buildSitemapIndexXml();
+  const xml = await buildLanguageSitemapXml('tr');
 
   return new Response(xml, {
     status: 200,

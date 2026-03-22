@@ -7,6 +7,7 @@ const {
   title,
   description,
   canonical,
+  xDefaultHref,
   image,
   noIndex = false,
   type = 'website',
@@ -65,4 +66,4 @@ const canonicalUrl = canonical || Astro.url.href;
 {alternates.map(alt => (
   <link rel="alternate" hreflang={alt.lang} href={alt.href} />
 ))}
-<link rel="alternate" hreflang="x-default" href={alternates.find(a => a.lang === 'en')?.href || siteUrl} />
+<link rel="alternate" hreflang="x-default" href={xDefaultHref || siteUrl} />
