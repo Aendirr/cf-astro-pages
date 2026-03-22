@@ -28,7 +28,10 @@ export async function buildSitemapXml(lang: Language): Promise<string> {
   ]);
 
   let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
-  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n';
+  xml += '        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n';
+  xml += '        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9\n';
+  xml += '        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">\n\n';
 
   const staticEntries = [
     { loc: `${siteUrl}/`, priority: '1.0', changefreq: 'daily' },
