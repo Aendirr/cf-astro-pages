@@ -9,6 +9,9 @@ Allow: /
 
 # Sitemaps
 Sitemap: ${siteUrl}/sitemap.xml
+Sitemap: ${siteUrl}/sitemap-tr.xml
+Sitemap: ${siteUrl}/sitemap-en.xml
+Sitemap: ${siteUrl}/sitemap-de.xml
 
 # Disallow search and other dynamic pages
 Disallow: /*/search
