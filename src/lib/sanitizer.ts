@@ -1,34 +1,19 @@
-import DOMPurify from 'isomorphic-dompurify';
-
 /**
- * Sanitize HTML content to prevent XSS attacks
- * Uses DOMPurify which works in both browser and server environments
+ * Lightweight HTML sanitizer that is safe in Cloudflare Workers.
+ * We keep this intentionally conservative and runtime-independent because
+ * DOM-based sanitizers can fail in some edge runtimes during SSR.
  */
 export function sanitizeHtml(html: string): string {
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: [
-      'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-      'p', 'br', 'hr',
-      'strong', 'em', 'b', 'i', 'u', 's', 'mark', 'code', 'pre',
-      'a', 'img',
-      'ul', 'ol', 'li',
-      'blockquote', 'cite',
-      'table', 'thead', 'tbody', 'tr', 'th', 'td',
-      'div', 'span',
-      'figure', 'figcaption',
-    ],
-    ALLOWED_ATTR: [
-      'href', 'title', 'target', 'rel',
-      'src', 'alt', 'width', 'height', 'loading',
-      'class', 'id',
-      'colspan', 'rowspan',
-    ],
-    ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
-    KEEP_CONTENT: true,
-    RETURN_DOM: false,
-    RETURN_DOM_FRAGMENT: false,
-    RETURN_TRUSTED_TYPE: false,
-  });
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+    .replace(/\son\w+=(["']).*?\1/gi, '')
+    .replace(/\son\w+=([^\s>]+)/gi, '')
+    .replace(/\s(href|src)=(["'])\s*javascript:[^"']*\2/gi, '')
+    .replace(/\s(href|src)=([^\s>]*javascript:[^\s>]*)/gi, '')
+    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+    .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+    .replace(/<embed\b[^>]*>/gi, '');
 }
 
 /**
