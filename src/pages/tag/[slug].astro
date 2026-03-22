@@ -1,0 +1,64 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+import PostCard from '@/components/PostCard.astro';
+import { api } from '@/lib/api';
+import { buildUrl, getCacheHeaders, getSiteLanguage, t } from '@/lib/utils';
+
+const { slug } = Astro.params;
+if (!slug) {
+  return new Response(null, { status: 404 });
+}
+
+const settings = await api.getSettings();
+const siteLang = getSiteLanguage(settings);
+const [response, tags] = await Promise.all([
+  api.getPosts({ lang: siteLang, page: 1, limit: 12, tagSlug: slug }),
+  api.getTags(siteLang),
+]);
+
+const tag = tags.find((item) => item.slug === slug);
+if (!tag) {
+  return new Response(null, { status: 404 });
+}
+
+Astro.response.headers.set('Cache-Control', getCacheHeaders('list')['Cache-Control']);
+
+const breadcrumbs = [
+  { label: t(siteLang, 'home'), href: '/' },
+  { label: `#${tag.name}`, href: `/tag/${slug}` },
+];
+---
+
+<BaseLayout
+  lang={siteLang}
+  settings={settings}
+  seo={{
+    title: `#${tag.name} - ${settings.siteName}`,
+    description: settings.siteDescription,
+    canonical: buildUrl(`tag/${slug}`),
+    xDefaultHref: buildUrl(),
+    type: 'website',
+    lang: siteLang,
+  }}
+  currentPath={`/tag/${slug}`}
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <Breadcrumb items={breadcrumbs} />
+    <header class="mb-12">
+      <h1 class="text-4xl md:text-5xl font-display font-bold text-neutral-900 mb-4">#{tag.name}</h1>
+    </header>
+
+    {response.data.length === 0 ? (
+      <div class="text-center py-12">
+        <p class="text-neutral-600 text-lg">{t(siteLang, 'noPosts')}</p>
+      </div>
+    ) : (
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {response.data.map((post) => (
+          <PostCard post={post} lang={siteLang} />
+        ))}
+      </div>
+    )}
+  </div>
+</BaseLayout>

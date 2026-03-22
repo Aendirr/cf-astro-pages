@@ -1,0 +1,36 @@
+---
+import PostLayout from '@/layouts/PostLayout.astro';
+import { api } from '@/lib/api';
+import { getCacheHeaders, getRelatedPosts, getSiteLanguage, addHeadingIds, extractTableOfContents, renderMarkdown } from '@/lib/utils';
+
+const { slug } = Astro.params;
+if (!slug) {
+  return new Response(null, { status: 404 });
+}
+
+const settings = await api.getSettings();
+const siteLang = getSiteLanguage(settings);
+const [post, allPostsResponse] = await Promise.all([
+  api.getPost(slug, siteLang),
+  api.getPosts({ lang: siteLang, page: 1, limit: 20 }),
+]);
+
+if (!post) {
+  return new Response(null, { status: 404 });
+}
+
+Astro.response.headers.set('Cache-Control', getCacheHeaders('post', post.noIndex)['Cache-Control']);
+
+let bodyContent = '';
+if (post.bodyMarkdown) {
+  bodyContent = await renderMarkdown(post.bodyMarkdown);
+  bodyContent = addHeadingIds(bodyContent);
+}
+
+const tocItems = extractTableOfContents(bodyContent);
+const relatedPosts = getRelatedPosts(post, allPostsResponse.data, 3);
+---
+
+<PostLayout post={post} lang={siteLang} settings={settings} relatedPosts={relatedPosts} tocItems={tocItems}>
+  <Fragment set:html={bodyContent} />
+</PostLayout>

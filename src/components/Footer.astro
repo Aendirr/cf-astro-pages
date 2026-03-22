@@ -1,5 +1,6 @@
 ---
 import type { Language, BlogSettings, SocialLink } from '@/types';
+import { normalizeSiteHref } from '@/lib/utils';
 
 interface Props {
   lang: Language;
@@ -60,7 +61,7 @@ const socialIcons: Record<SocialLink['platform'], string> = {
             {section.links.map((link) => (
               <li>
                 <a
-                  href={link.href.startsWith('/') ? `/${lang}${link.href}` : link.href}
+                  href={link.href.startsWith('/') ? normalizeSiteHref(link.href) : link.href}
                   class="hover:text-white transition-colors text-sm"
                   target={link.external ? '_blank' : undefined}
                   rel={link.external ? 'noopener noreferrer' : undefined}

@@ -1,6 +1,7 @@
 import type { Language, Post, Category, Tag, PaginatedResponse, SingleResponse, BlogSettings } from '@/types';
 
-const API_BASE_URL = import.meta.env.API_BASE_URL || 'https://api.sarlab.pro';
+const API_BASE_URL = import.meta.env.PUBLIC_API_BASE_URL || 'https://api.sarlab.pro';
+const BLOG_DOMAIN = import.meta.env.PUBLIC_BLOG_DOMAIN || '';
 const REQUEST_TIMEOUT = 10000; // 10 seconds
 
 // In-memory cache for settings
@@ -11,6 +12,22 @@ const SETTINGS_CACHE_TTL = 300000; // 5 minutes
 interface FetchOptions extends RequestInit {
   timeout?: number;
   retries?: number;
+}
+
+function buildUrl(path: string, params: Record<string, string> = {}): string {
+  const url = new URL(path, API_BASE_URL);
+
+  if (BLOG_DOMAIN) {
+    url.searchParams.set('domain', BLOG_DOMAIN);
+  }
+
+  for (const [key, value] of Object.entries(params)) {
+    if (value) {
+      url.searchParams.set(key, value);
+    }
+  }
+
+  return url.toString();
 }
 
 /**
@@ -69,7 +86,7 @@ export const api = {
 
     try {
       const response = await fetchWithTimeout(
-        `${API_BASE_URL}/api/public/blog/settings`,
+        buildUrl('/api/public/blog/settings'),
         { retries: 1 }
       );
 
@@ -78,18 +95,21 @@ export const api = {
       }
 
       const result: SingleResponse<BlogSettings> = await response.json();
-      settingsCache = result.data;
+      settingsCache = {
+        primaryLanguage: 'tr',
+        ...result.data,
+      };
       settingsCacheTime = now;
 
-      return result.data;
+      return settingsCache;
     } catch (error) {
       console.error('Error fetching settings:', error);
       return {
+        primaryLanguage: 'tr',
         siteName: 'Sarlab Blog',
         siteDescription: 'Premium marketing and technology insights',
         navigation: [
           { label: 'Home', href: '/' },
-          { label: 'Blog', href: '/blog' },
         ],
         footerLinks: [],
         socialLinks: [],
@@ -122,7 +142,7 @@ export const api = {
 
     try {
       const response = await fetchWithTimeout(
-        `${API_BASE_URL}/api/public/blog/posts?${queryParams}`,
+        buildUrl('/api/public/blog/posts', Object.fromEntries(queryParams.entries())),
         { retries: 1 }
       );
 
@@ -149,7 +169,7 @@ export const api = {
   async getPost(slug: string, lang: Language): Promise<Post | null> {
     try {
       const response = await fetchWithTimeout(
-        `${API_BASE_URL}/api/public/blog/posts/${slug}?lang=${lang}`,
+        buildUrl(`/api/public/blog/posts/${encodeURIComponent(slug)}`, { lang }),
         { retries: 1 }
       );
 
@@ -174,7 +194,7 @@ export const api = {
   async getCategories(lang: Language): Promise<Category[]> {
     try {
       const response = await fetchWithTimeout(
-        `${API_BASE_URL}/api/public/blog/categories?lang=${lang}`,
+        buildUrl('/api/public/blog/categories', { lang }),
         { retries: 1 }
       );
 
@@ -196,7 +216,7 @@ export const api = {
   async getTags(lang: Language): Promise<Tag[]> {
     try {
       const response = await fetchWithTimeout(
-        `${API_BASE_URL}/api/public/blog/tags?lang=${lang}`,
+        buildUrl('/api/public/blog/tags', { lang }),
         { retries: 1 }
       );
 
@@ -215,22 +235,20 @@ export const api = {
   /**
    * Get all posts for sitemap (all languages)
    */
-  async getAllPostsForSitemap(): Promise<Post[]> {
+  async getAllPostsForSitemap(lang?: Language): Promise<Post[]> {
     try {
-      const languages: Language[] = ['tr', 'en', 'de'];
+      const resolvedLang = lang ?? (await this.getSettings()).primaryLanguage ?? 'tr';
       const allPosts: Post[] = [];
 
-      for (const lang of languages) {
-        let page = 1;
-        let hasMore = true;
+      let page = 1;
+      let hasMore = true;
 
-        while (hasMore) {
-          const response = await this.getPosts({ lang, page, limit: 100 });
-          allPosts.push(...response.data);
+      while (hasMore) {
+        const response = await this.getPosts({ lang: resolvedLang, page, limit: 100 });
+        allPosts.push(...response.data);
 
-          hasMore = response.data.length === 100;
-          page++;
-        }
+        hasMore = response.data.length === 100;
+        page++;
       }
 
       return allPosts;

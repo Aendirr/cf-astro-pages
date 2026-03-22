@@ -4,6 +4,7 @@ export type Language = 'tr' | 'en' | 'de';
 export interface BlogSettings {
   siteName: string;
   siteDescription: string;
+  primaryLanguage?: Language;
   logoUrl?: string;
   faviconUrl?: string;
   ogImageUrl?: string;
@@ -134,7 +135,6 @@ export interface SEOProps {
   author?: string;
   tags?: string[];
   lang: Language;
-  alternates?: Array<{ lang: Language; href: string }>;
   twitterHandle?: string;
 }
 

@@ -1,4 +1,4 @@
-import type { Language, Post, TableOfContentsItem } from '@/types';
+import type { BlogSettings, Language, Post, TableOfContentsItem } from '@/types';
 import { marked } from 'marked';
 import { sanitizeHtml } from './sanitizer';
 
@@ -222,10 +222,35 @@ export function getCacheHeaders(type: 'list' | 'post' | 'static', noIndex = fals
 /**
  * Build URL for language
  */
-export function buildUrl(lang: Language, path: string = ''): string {
+export function buildUrl(path: string = ''): string {
   const baseUrl = import.meta.env.PUBLIC_SITE_URL || 'https://sarlab.pro';
   const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-  return `${baseUrl}/${lang}${cleanPath ? '/' + cleanPath : ''}`;
+  return `${baseUrl}${cleanPath ? '/' + cleanPath : ''}`;
+}
+
+export function getSiteLanguage(settings?: Pick<BlogSettings, 'primaryLanguage'> | null): Language {
+  if (settings?.primaryLanguage && isValidLanguage(settings.primaryLanguage)) {
+    return settings.primaryLanguage;
+  }
+  return 'tr';
+}
+
+export function normalizeSiteHref(href: string): string {
+  if (!href.startsWith('/')) {
+    return href;
+  }
+
+  const withoutLang = href.replace(/^\/(tr|en|de)(?=\/|$)/, '') || '/';
+
+  if (withoutLang === '/blog') {
+    return '/';
+  }
+
+  if (withoutLang.startsWith('/blog/')) {
+    return withoutLang.replace(/^\/blog/, '');
+  }
+
+  return withoutLang;
 }
 
 /**

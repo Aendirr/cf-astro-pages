@@ -1,0 +1,64 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+import PostCard from '@/components/PostCard.astro';
+import Pagination from '@/components/Pagination.astro';
+import { api } from '@/lib/api';
+import { buildUrl, getCacheHeaders, getSiteLanguage, t } from '@/lib/utils';
+
+const pageNumber = Number.parseInt(Astro.params.page || '1', 10);
+if (!Number.isFinite(pageNumber) || pageNumber < 2) {
+  return Astro.redirect('/', 301);
+}
+
+const settings = await api.getSettings();
+const siteLang = getSiteLanguage(settings);
+const response = await api.getPosts({ lang: siteLang, page: pageNumber, limit: 12 });
+const totalPages = Math.ceil(response.total / response.limit);
+
+if (pageNumber > totalPages && totalPages > 0) {
+  return Astro.redirect('/', 301);
+}
+
+Astro.response.headers.set('Cache-Control', getCacheHeaders('list')['Cache-Control']);
+
+const breadcrumbs = [
+  { label: t(siteLang, 'home'), href: '/' },
+  { label: `${t(siteLang, 'page')} ${pageNumber}`, href: `/page/${pageNumber}` },
+];
+---
+
+<BaseLayout
+  lang={siteLang}
+  settings={settings}
+  seo={{
+    title: `${settings.siteName} - ${t(siteLang, 'page')} ${pageNumber}`,
+    description: settings.seoDescription || settings.siteDescription,
+    canonical: buildUrl(`page/${pageNumber}`),
+    xDefaultHref: buildUrl(),
+    type: 'website',
+    lang: siteLang,
+  }}
+  currentPath={`/page/${pageNumber}`}
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <Breadcrumb items={breadcrumbs} />
+
+    <header class="mb-12">
+      <h1 class="text-4xl md:text-5xl font-display font-bold text-neutral-900 mb-4">
+        {settings.siteName}
+      </h1>
+      <p class="text-xl text-neutral-600">
+        {t(siteLang, 'page')} {pageNumber}
+      </p>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {response.data.map((post) => (
+        <PostCard post={post} lang={siteLang} />
+      ))}
+    </div>
+
+    <Pagination currentPage={response.page} totalPages={totalPages} baseUrl="" lang={siteLang} />
+  </div>
+</BaseLayout>

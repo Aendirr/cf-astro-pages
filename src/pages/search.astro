@@ -1,0 +1,64 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+import PostCard from '@/components/PostCard.astro';
+import { api } from '@/lib/api';
+import { buildUrl, getSiteLanguage, t } from '@/lib/utils';
+
+const searchQuery = Astro.url.searchParams.get('q') || '';
+const settings = await api.getSettings();
+const siteLang = getSiteLanguage(settings);
+const response = searchQuery
+  ? await api.getPosts({ lang: siteLang, page: 1, limit: 50, search: searchQuery })
+  : { data: [], total: 0, page: 1, limit: 50 };
+
+const breadcrumbs = [
+  { label: t(siteLang, 'home'), href: '/' },
+  { label: t(siteLang, 'search'), href: '/search' },
+];
+---
+
+<BaseLayout
+  lang={siteLang}
+  settings={settings}
+  seo={{
+    title: t(siteLang, 'search'),
+    description: `${t(siteLang, 'search')} - ${settings.siteName}`,
+    canonical: buildUrl('search'),
+    xDefaultHref: buildUrl(),
+    type: 'website',
+    lang: siteLang,
+    noIndex: true,
+  }}
+  currentPath="/search"
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <Breadcrumb items={breadcrumbs} />
+
+    <header class="mb-12">
+      <h1 class="text-4xl md:text-5xl font-display font-bold text-neutral-900 mb-8">
+        {t(siteLang, 'search')}
+      </h1>
+
+      <form method="get" action="/search" class="max-w-2xl">
+        <div class="relative">
+          <input
+            type="search"
+            name="q"
+            value={searchQuery}
+            placeholder={t(siteLang, 'searchPlaceholder')}
+            class="w-full px-6 py-4 pl-14 text-lg border-2 border-neutral-300 rounded-xl focus:border-primary-500 focus:ring-2 focus:ring-primary-200 focus:outline-none transition-colors"
+          />
+        </div>
+      </form>
+    </header>
+
+    {response.data.length > 0 && (
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {response.data.map((post) => (
+          <PostCard post={post} lang={siteLang} />
+        ))}
+      </div>
+    )}
+  </div>
+</BaseLayout>

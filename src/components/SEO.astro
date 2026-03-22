@@ -16,7 +16,6 @@ const {
   author,
   tags,
   lang,
-  alternates = [],
   twitterHandle,
 } = Astro.props;
 
@@ -62,8 +61,4 @@ const canonicalUrl = canonical || Astro.url.href;
 {twitterHandle && <meta name="twitter:site" content={twitterHandle} />}
 {twitterHandle && <meta name="twitter:creator" content={twitterHandle} />}
 
-<!-- Alternate Languages -->
-{alternates.map(alt => (
-  <link rel="alternate" hreflang={alt.lang} href={alt.href} />
-))}
-<link rel="alternate" hreflang="x-default" href={xDefaultHref || siteUrl} />
+<link rel="alternate" hreflang="x-default" href={xDefaultHref || canonicalUrl || siteUrl} />

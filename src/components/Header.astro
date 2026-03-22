@@ -1,6 +1,6 @@
 ---
 import type { Language, BlogSettings } from '@/types';
-import LanguageSwitcher from './LanguageSwitcher.astro';
+import { normalizeSiteHref } from '@/lib/utils';
 
 interface Props {
   lang: Language;
@@ -16,7 +16,7 @@ const { lang, currentPath = '', settings } = Astro.props;
     <div class="flex justify-between items-center h-16">
       <!-- Logo -->
       <div class="flex-shrink-0">
-        <a href={`/${lang}`} class="flex items-center space-x-2 text-xl font-display font-bold text-neutral-900 hover:text-primary-600 transition-colors">
+        <a href="/" class="flex items-center space-x-2 text-xl font-display font-bold text-neutral-900 hover:text-primary-600 transition-colors">
           {settings.logoUrl && (
             <img src={settings.logoUrl} alt={settings.siteName} class="h-8 w-auto" />
           )}
@@ -28,7 +28,7 @@ const { lang, currentPath = '', settings } = Astro.props;
       <div class="hidden md:flex items-center space-x-8">
         {settings.navigation.map((item) => (
           <a
-            href={item.href.startsWith('/') ? `/${lang}${item.href}` : item.href}
+            href={item.href.startsWith('/') ? normalizeSiteHref(item.href) : item.href}
             class="text-sm font-medium text-neutral-700 hover:text-primary-600 transition-colors"
             target={item.external ? '_blank' : undefined}
             rel={item.external ? 'noopener noreferrer' : undefined}
@@ -38,11 +38,8 @@ const { lang, currentPath = '', settings } = Astro.props;
         ))}
       </div>
 
-      <!-- Language Switcher & Mobile Menu -->
+      <!-- Mobile Menu -->
       <div class="flex items-center space-x-4">
-        <LanguageSwitcher lang={lang} currentPath={currentPath} />
-
-        <!-- Mobile menu button -->
         <button
           type="button"
           class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-neutral-700 hover:text-primary-600 hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
@@ -62,7 +59,7 @@ const { lang, currentPath = '', settings } = Astro.props;
       <div class="px-2 pt-2 pb-3 space-y-1">
         {settings.navigation.map((item) => (
           <a
-            href={item.href.startsWith('/') ? `/${lang}${item.href}` : item.href}
+            href={item.href.startsWith('/') ? normalizeSiteHref(item.href) : item.href}
             class="block px-3 py-2 rounded-md text-base font-medium text-neutral-700 hover:text-primary-600 hover:bg-neutral-50"
             target={item.external ? '_blank' : undefined}
             rel={item.external ? 'noopener noreferrer' : undefined}

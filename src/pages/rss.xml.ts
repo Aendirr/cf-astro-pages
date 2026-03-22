@@ -1,18 +1,15 @@
 import type { APIRoute } from 'astro';
-import type { Language } from '@/types';
 import { api } from '@/lib/api';
-import { getCacheHeaders } from '@/lib/utils';
-import { stripHtml, truncateText } from '@/lib/sanitizer';
+import { getCacheHeaders, getSiteLanguage } from '@/lib/utils';
+import { stripHtml } from '@/lib/sanitizer';
 
 export const GET: APIRoute = async () => {
   const siteUrl = import.meta.env.PUBLIC_SITE_URL || 'https://sarlab.pro';
 
   try {
-    // Fetch settings and latest posts in parallel
-    const [settings, response] = await Promise.all([
-      api.getSettings(),
-      api.getPosts({ lang: 'tr' as Language, page: 1, limit: 20 }),
-    ]);
+    const settings = await api.getSettings();
+    const siteLang = getSiteLanguage(settings);
+    const response = await api.getPosts({ lang: siteLang, page: 1, limit: 20 });
 
     const posts = response.data.filter(post => !post.noIndex);
 
@@ -21,14 +18,14 @@ export const GET: APIRoute = async () => {
     xml += '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">\n';
     xml += '  <channel>\n';
     xml += `    <title>${escapeXml(settings.siteName)}</title>\n`;
-    xml += `    <link>${siteUrl}/tr</link>\n`;
+    xml += `    <link>${siteUrl}</link>\n`;
     xml += `    <description>${escapeXml(settings.siteDescription)}</description>\n`;
-    xml += `    <language>tr</language>\n`;
+    xml += `    <language>${siteLang}</language>\n`;
     xml += `    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>\n`;
     xml += `    <atom:link href="${siteUrl}/rss.xml" rel="self" type="application/rss+xml" />\n`;
 
     posts.forEach(post => {
-      const postUrl = `${siteUrl}/${post.lang}/blog/${post.slug}`;
+      const postUrl = `${siteUrl}/${post.slug}`;
       const pubDate = new Date(post.publishedAt).toUTCString();
       const description = stripHtml(post.excerpt);
       const content = post.bodyMarkdown || post.excerpt;
