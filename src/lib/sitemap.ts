@@ -1,8 +1,9 @@
 import type { Language, Post } from '@/types';
 import { api } from '@/lib/api';
+import { buildUrl } from '@/lib/utils';
 
 export function getSiteUrl(): string {
-  return import.meta.env.PUBLIC_SITE_URL || 'https://sarlab.pro';
+  return buildUrl();
 }
 
 function escapeXml(value: string): string {

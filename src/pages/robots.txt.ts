@@ -1,7 +1,8 @@
 import type { APIRoute } from 'astro';
+import { buildUrl } from '@/lib/utils';
 
 export const GET: APIRoute = () => {
-  const siteUrl = import.meta.env.PUBLIC_SITE_URL || 'https://sarlab.pro';
+  const siteUrl = buildUrl();
 
   const robotsTxt = `# https://www.robotstxt.org/robotstxt.html
 User-agent: *

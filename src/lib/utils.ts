@@ -223,9 +223,67 @@ export function getCacheHeaders(type: 'list' | 'post' | 'static', noIndex = fals
  * Build URL for language
  */
 export function buildUrl(path: string = ''): string {
-  const baseUrl = import.meta.env.PUBLIC_SITE_URL || 'https://sarlab.pro';
+  const baseUrl = normalizePublicBaseUrl(import.meta.env.PUBLIC_SITE_URL || 'https://sarlab.pro');
   const cleanPath = path.startsWith('/') ? path.slice(1) : path;
   return `${baseUrl}${cleanPath ? '/' + cleanPath : ''}`;
+}
+
+export function normalizePublicUrl(urlOrPath: string): string {
+  const baseUrl = normalizePublicBaseUrl(import.meta.env.PUBLIC_SITE_URL || 'https://sarlab.pro');
+
+  try {
+    const normalized = new URL(urlOrPath, baseUrl);
+    const targetHost = new URL(baseUrl).host;
+    normalized.protocol = 'https:';
+    normalized.host = targetHost;
+    return normalized.toString();
+  } catch {
+    return buildUrl(urlOrPath);
+  }
+}
+
+function normalizePublicBaseUrl(baseUrl: string): string {
+  try {
+    const parsed = new URL(baseUrl);
+    const isLocal = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1';
+    if (!isLocal && !parsed.hostname.startsWith('www.')) {
+      parsed.hostname = `www.${parsed.hostname}`;
+    }
+    parsed.protocol = 'https:';
+    return parsed.toString().replace(/\/$/, '');
+  } catch {
+    return baseUrl.replace(/\/$/, '');
+  }
+}
+
+export function collapseRepeatedContent(html: string): string {
+  const trimmed = html.trim();
+  if (trimmed.length < 800) {
+    return html;
+  }
+
+  const normalize = (value: string) => value.replace(/\s+/g, ' ').trim();
+  const midpoint = Math.floor(trimmed.length / 2);
+
+  for (let offset = -240; offset <= 240; offset += 8) {
+    const split = midpoint + offset;
+    if (split <= 0 || split >= trimmed.length) {
+      continue;
+    }
+
+    const left = trimmed.slice(0, split).trim();
+    const right = trimmed.slice(split).trim();
+
+    if (left.length < 400 || right.length < 400) {
+      continue;
+    }
+
+    if (normalize(left) === normalize(right)) {
+      return left;
+    }
+  }
+
+  return html;
 }
 
 export function getSiteLanguage(settings?: Pick<BlogSettings, 'primaryLanguage'> | null): Language {

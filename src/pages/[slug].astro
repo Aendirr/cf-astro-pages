@@ -1,7 +1,7 @@
 ---
 import PostLayout from '@/layouts/PostLayout.astro';
 import { api } from '@/lib/api';
-import { getCacheHeaders, getRelatedPosts, getSiteLanguage, addHeadingIds, extractTableOfContents, renderMarkdown } from '@/lib/utils';
+import { getCacheHeaders, getRelatedPosts, getSiteLanguage, addHeadingIds, extractTableOfContents, renderMarkdown, collapseRepeatedContent } from '@/lib/utils';
 
 const { slug } = Astro.params;
 if (!slug) {
@@ -25,6 +25,7 @@ let bodyContent = '';
 if (post.bodyMarkdown) {
   bodyContent = await renderMarkdown(post.bodyMarkdown);
   bodyContent = addHeadingIds(bodyContent);
+  bodyContent = collapseRepeatedContent(bodyContent);
 }
 
 const tocItems = extractTableOfContents(bodyContent);

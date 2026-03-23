@@ -1,10 +1,10 @@
 import type { APIRoute } from 'astro';
 import { api } from '@/lib/api';
-import { getCacheHeaders, getSiteLanguage } from '@/lib/utils';
+import { buildUrl, getCacheHeaders, getSiteLanguage } from '@/lib/utils';
 import { stripHtml } from '@/lib/sanitizer';
 
 export const GET: APIRoute = async () => {
-  const siteUrl = import.meta.env.PUBLIC_SITE_URL || 'https://sarlab.pro';
+  const siteUrl = buildUrl();
 
   try {
     const settings = await api.getSettings();

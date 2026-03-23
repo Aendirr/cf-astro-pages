@@ -1,5 +1,6 @@
 ---
 import type { SEOProps } from '@/types';
+import { buildUrl, normalizePublicUrl } from '@/lib/utils';
 
 interface Props extends SEOProps {}
 
@@ -20,12 +21,12 @@ const {
 } = Astro.props;
 
 const siteName = import.meta.env.PUBLIC_SITE_NAME || 'Sarlab Blog';
-const siteUrl = import.meta.env.PUBLIC_SITE_URL || 'https://sarlab.pro';
+const siteUrl = buildUrl();
 const defaultImage = `${siteUrl}/og-default.jpg`;
 
 const fullTitle = title.includes(siteName) ? title : `${title} | ${siteName}`;
 const ogImage = image || defaultImage;
-const canonicalUrl = canonical || Astro.url.href;
+const canonicalUrl = normalizePublicUrl(canonical || Astro.url.href);
 ---
 
 <!-- Primary Meta Tags -->
@@ -61,4 +62,4 @@ const canonicalUrl = canonical || Astro.url.href;
 {twitterHandle && <meta name="twitter:site" content={twitterHandle} />}
 {twitterHandle && <meta name="twitter:creator" content={twitterHandle} />}
 
-<link rel="alternate" hreflang="x-default" href={xDefaultHref || canonicalUrl || siteUrl} />
+<link rel="alternate" hreflang="x-default" href={normalizePublicUrl(xDefaultHref || canonicalUrl || siteUrl)} />

@@ -8,7 +8,7 @@ import PostCard from '@/components/PostCard.astro';
 import CTABlock from '@/components/blocks/CTABlock.astro';
 import RelatedLinks from '@/components/blocks/RelatedLinks.astro';
 import RedirectLinks from '@/components/blocks/RedirectLinks.astro';
-import { formatDate, calculateReadingTime, t, formatDateISO, buildUrl } from '@/lib/utils';
+import { formatDate, calculateReadingTime, t, formatDateISO, buildUrl, normalizePublicUrl } from '@/lib/utils';
 
 interface Props {
   post: Post;
@@ -70,7 +70,7 @@ const breadcrumbJsonLd = {
     '@type': 'ListItem',
     position: index + 1,
     name: item.label,
-    item: `${import.meta.env.PUBLIC_SITE_URL}${item.href}`,
+    item: normalizePublicUrl(item.href),
   })),
 };
 ---
@@ -81,7 +81,7 @@ const breadcrumbJsonLd = {
   seo={{
     title: seoTitle,
     description: seoDescription,
-    canonical: post.canonicalUrl || postUrl,
+    canonical: normalizePublicUrl(post.canonicalUrl || postUrl),
     image: seoImage,
     noIndex: post.noIndex,
     type: 'article',
