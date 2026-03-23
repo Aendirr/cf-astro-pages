@@ -17,7 +17,7 @@ export default defineConfig({
       external: ['node:buffer', 'node:path', 'node:fs']
     }
   },
-  site: 'https://sarlab.pro',
+  site: process.env.PUBLIC_SITE_URL || 'https://sarlab.pro',
   compressHTML: true,
   build: {
     inlineStylesheets: 'auto'

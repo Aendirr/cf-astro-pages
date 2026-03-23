@@ -239,21 +239,20 @@ export const api = {
     try {
       const resolvedLang = lang ?? (await this.getSettings()).primaryLanguage ?? 'tr';
       const allPosts: Post[] = [];
-
+      const pageSize = 50;
       let page = 1;
-      let hasMore = true;
+      let total = Infinity;
 
-      while (hasMore) {
-        const response = await this.getPosts({ lang: resolvedLang, page, limit: 100 });
+      while (allPosts.length < total) {
+        const response = await this.getPosts({ lang: resolvedLang, page, limit: pageSize });
+        if (page === 1) total = response.total;
+        if (response.data.length === 0) break;
         allPosts.push(...response.data);
-
-        hasMore = response.data.length === 100;
         page++;
       }
 
       return allPosts;
     } catch (error) {
-      console.error('Error fetching posts for sitemap:', error);
       return [];
     }
   },
