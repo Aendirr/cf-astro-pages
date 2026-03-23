@@ -102,15 +102,12 @@ export const api = {
       settingsCacheTime = now;
 
       return settingsCache;
-    } catch (error) {
-      console.error('Error fetching settings:', error);
+    } catch {
       return {
         primaryLanguage: 'tr',
-        siteName: 'Sarlab Blog',
-        siteDescription: 'Premium marketing and technology insights',
-        navigation: [
-          { label: 'Home', href: '/' },
-        ],
+        siteName: '',
+        siteDescription: '',
+        navigation: [],
         footerLinks: [],
         socialLinks: [],
       };
