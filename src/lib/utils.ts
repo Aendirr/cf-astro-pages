@@ -245,10 +245,6 @@ export function normalizePublicUrl(urlOrPath: string): string {
 function normalizePublicBaseUrl(baseUrl: string): string {
   try {
     const parsed = new URL(baseUrl);
-    const isLocal = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1';
-    if (!isLocal && !parsed.hostname.startsWith('www.')) {
-      parsed.hostname = `www.${parsed.hostname}`;
-    }
     parsed.protocol = 'https:';
     return parsed.toString().replace(/\/$/, '');
   } catch {
