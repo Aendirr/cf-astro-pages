@@ -19,6 +19,8 @@ export interface BlogSettings {
   newsletterTitle?: string;
   newsletterDescription?: string;
   analyticsId?: string;
+  ctaUrl?: string;
+  ctaButtonText?: string;
 }
 
 export interface NavigationItem {

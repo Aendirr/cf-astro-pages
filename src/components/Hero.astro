@@ -6,12 +6,16 @@ interface Props {
   lang: Language;
   title?: string;
   subtitle?: string;
+  ctaUrl?: string;
+  ctaButtonText?: string;
 }
 
 const {
   lang,
   title = 'Sarlab Blog',
   subtitle = import.meta.env.PUBLIC_SITE_DESCRIPTION || 'Premium marketing and technology insights',
+  ctaUrl,
+  ctaButtonText,
 } = Astro.props;
 ---
 
@@ -43,6 +47,16 @@ const {
           </svg>
           {t(lang, 'search')}
         </a>
+        {ctaUrl && (
+          <a
+            href={ctaUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 transition-colors shadow-md hover:shadow-lg"
+          >
+            {ctaButtonText || 'Giriş Yap'}
+          </a>
+        )}
       </div>
     </div>
   </div>
