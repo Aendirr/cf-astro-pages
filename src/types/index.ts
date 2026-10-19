@@ -65,6 +65,18 @@ export interface Post {
   seoTitle?: string;
   seoDescription?: string;
   ogImageUrl?: string;
+  ctaUrl?: string | null;
+  ctaText?: string | null;
+  ctaColor?: string | null;
+  socialLinks?: SocialLinks | null;
+}
+
+export interface SocialLinks {
+  twitter?: string;
+  facebook?: string;
+  linkedin?: string;
+  telegram?: string;
+  instagram?: string;
 }
 
 export interface PostBlocks {

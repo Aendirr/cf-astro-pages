@@ -3,6 +3,7 @@ import type { Post, Language, TableOfContentsItem, BlogSettings } from '@/types'
 import BaseLayout from './BaseLayout.astro';
 import Breadcrumb from '@/components/Breadcrumb.astro';
 import ShareButtons from '@/components/ShareButtons.astro';
+import SiteCta from '@/components/SiteCta.astro';
 import TableOfContents from '@/components/TableOfContents.astro';
 import PostCard from '@/components/PostCard.astro';
 import CTABlock from '@/components/blocks/CTABlock.astro';
@@ -138,7 +139,12 @@ const breadcrumbJsonLd = {
             <span>{readingTime} {t(lang, 'readingTime')}</span>
           </div>
 
-          <ShareButtons lang={lang} title={post.title} url={postUrl} />
+          <ShareButtons lang={lang} title={post.title} url={postUrl} socialLinks={post.socialLinks} />
+          {post.ctaUrl && (
+            <div class="mt-6">
+              <SiteCta url={post.ctaUrl} text={post.ctaText} color={post.ctaColor} />
+            </div>
+          )}
         </header>
 
         <!-- Cover Image -->
@@ -192,8 +198,13 @@ const breadcrumbJsonLd = {
         )}
 
         <!-- Share Again -->
-        <div class="mt-8 pt-8 border-t border-neutral-200">
-          <ShareButtons lang={lang} title={post.title} url={postUrl} />
+        <div class="mt-8 pt-8 border-t border-neutral-200 flex flex-col gap-6">
+          {post.ctaUrl && (
+            <div class="flex justify-center">
+              <SiteCta url={post.ctaUrl} text={post.ctaText} color={post.ctaColor} size="lg" />
+            </div>
+          )}
+          <ShareButtons lang={lang} title={post.title} url={postUrl} socialLinks={post.socialLinks} />
         </div>
       </div>
 
