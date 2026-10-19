@@ -21,6 +21,8 @@ export interface BlogSettings {
   analyticsId?: string;
   ctaUrl?: string;
   ctaButtonText?: string;
+  customHead?: string | null;
+  customCss?: string | null;
 }
 
 export interface NavigationItem {

@@ -62,6 +62,9 @@ const settings = providedSettings || await api.getSettings();
     <meta http-equiv="X-Frame-Options" content="SAMEORIGIN" />
     <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
+
+    {settings.customCss && <style is:inline set:html={settings.customCss} />}
+    {settings.customHead && <Fragment set:html={settings.customHead} />}
   </head>
   <body class="antialiased bg-white text-neutral-900 font-sans">
     <Header lang={lang} settings={settings} currentPath={currentPath} />
