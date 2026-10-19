@@ -1,6 +1,7 @@
 ---
 import type { Language } from '@/types';
 import { t } from '@/lib/utils';
+import SiteCta from '@/components/SiteCta.astro';
 
 interface Props {
   lang: Language;
@@ -8,6 +9,7 @@ interface Props {
   subtitle?: string;
   ctaUrl?: string;
   ctaButtonText?: string;
+  ctaColor?: string | null;
 }
 
 const {
@@ -16,6 +18,7 @@ const {
   subtitle = import.meta.env.PUBLIC_SITE_DESCRIPTION || 'Premium marketing and technology insights',
   ctaUrl,
   ctaButtonText,
+  ctaColor,
 } = Astro.props;
 ---
 
@@ -28,7 +31,8 @@ const {
       <p class="text-xl md:text-2xl text-neutral-600 mb-8">
         {subtitle}
       </p>
-      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <SiteCta url={ctaUrl} text={ctaButtonText} color={ctaColor} />
         <a
           href="/#latest-posts"
           class="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 transition-colors shadow-md hover:shadow-lg"
@@ -47,16 +51,6 @@ const {
           </svg>
           {t(lang, 'search')}
         </a>
-        {ctaUrl && (
-          <a
-            href={ctaUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 transition-colors shadow-md hover:shadow-lg"
-          >
-            {ctaButtonText || 'Giriş Yap'}
-          </a>
-        )}
       </div>
     </div>
   </div>
