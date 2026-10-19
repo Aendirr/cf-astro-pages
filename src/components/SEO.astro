@@ -18,13 +18,14 @@ const {
   tags,
   lang,
   twitterHandle,
+  exactTitle = false,
 } = Astro.props;
 
 const siteName = import.meta.env.PUBLIC_SITE_NAME || 'Sarlab Blog';
 const siteUrl = buildUrl();
 const defaultImage = `${siteUrl}/og-default.jpg`;
 
-const fullTitle = title.includes(siteName) ? title : `${title} | ${siteName}`;
+const fullTitle = exactTitle || title.includes(siteName) ? title : `${title} | ${siteName}`;
 const ogImage = image || defaultImage;
 const canonicalUrl = normalizePublicUrl(canonical || Astro.url.href);
 ---

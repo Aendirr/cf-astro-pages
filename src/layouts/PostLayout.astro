@@ -81,6 +81,7 @@ const breadcrumbJsonLd = {
   settings={settings}
   seo={{
     title: seoTitle,
+    exactTitle: Boolean(post.seoTitle),
     description: seoDescription,
     canonical: normalizePublicUrl(post.canonicalUrl || postUrl),
     image: seoImage,

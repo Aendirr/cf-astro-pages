@@ -153,6 +153,7 @@ export interface SEOProps {
   tags?: string[];
   lang: Language;
   twitterHandle?: string;
+  exactTitle?: boolean;
 }
 
 export interface TableOfContentsItem {
